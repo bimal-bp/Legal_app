@@ -1,37 +1,32 @@
 import streamlit as st
-import firebase_admin
-from firebase_admin import auth, credentials, firestore
-import requests
 
-# Initialize Firebase
-if not firebase_admin._apps:
-    cred = credentials.Certificate("firebase_credentials.json")  # Replace with your Firebase service account JSON file
-    firebase_admin.initialize_app(cred)
-
-db = firestore.client()
+# Temporary user storage (for demo purposes)
+users_db = {
+    "client@example.com": {"password": "client123", "role": "Client"},
+    "lawyer@example.com": {"password": "lawyer123", "role": "Lawyer"},
+}
 
 # Function to check authentication
 def check_auth():
-    if "user" not in st.session_state:
-        return None
-    return st.session_state["user"]
+    return st.session_state.get("user", None)
 
 # Function to sign in
 def login():
     st.subheader("Login")
     email = st.text_input("Email")
     password = st.text_input("Password", type="password")
+    
     if st.button("Login"):
-        try:
-            user = auth.get_user_by_email(email)
-            st.session_state["user"] = user
-            st.session_state["email"] = email
+        user = users_db.get(email)
+        if user and user["password"] == password:
+            st.session_state["user"] = email
+            st.session_state["role"] = user["role"]
             st.success("Login Successful!")
             st.experimental_rerun()
-        except Exception as e:
+        else:
             st.error("Invalid Credentials")
 
-# Function to sign up
+# Function to sign up (store new users in the dictionary)
 def signup():
     st.subheader("Signup")
     email = st.text_input("Email")
@@ -39,19 +34,11 @@ def signup():
     role = st.selectbox("Role", ["Client", "Lawyer"])
     
     if st.button("Signup"):
-        try:
-            user = auth.create_user(email=email, password=password)
-            db.collection("users").document(user.uid).set({"email": email, "role": role})
+        if email in users_db:
+            st.error("User already exists!")
+        else:
+            users_db[email] = {"password": password, "role": role}
             st.success("Signup Successful! Please login.")
-        except Exception as e:
-            st.error("Error creating user")
-
-# Function to get user role
-def get_user_role(email):
-    users_ref = db.collection("users").where("email", "==", email).stream()
-    for user in users_ref:
-        return user.to_dict().get("role")
-    return None
 
 # Home Page for Clients
 def client_home():
@@ -69,8 +56,7 @@ def main():
     user = check_auth()
 
     if user:
-        email = st.session_state["email"]
-        role = get_user_role(email)
+        role = st.session_state["role"]
 
         if role == "Client":
             client_home()
@@ -81,7 +67,7 @@ def main():
 
         if st.sidebar.button("Logout"):
             del st.session_state["user"]
-            del st.session_state["email"]
+            del st.session_state["role"]
             st.success("Logged out successfully!")
             st.experimental_rerun()
     else:
