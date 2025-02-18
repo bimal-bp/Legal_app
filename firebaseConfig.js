@@ -1,25 +1,32 @@
-import { initializeApp } from "firebase/app";
-import { initializeAuth, getReactNativePersistence } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-analytics.js";
+  // Add other Firebase products you plan to use (e.g., Auth, Firestore)
+  // import { getAuth } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+  // import { getFirestore } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyAAMjMXlpIPBof-7ZjQiQypAA9P1X0JhE0",
+    authDomain: "legal-aid-44a46.firebaseapp.com",
+    databaseURL: "https://legal-aid-44a46-default-rtdb.firebaseio.com",
+    projectId: "legal-aid-44a46",
+    storageBucket: "legal-aid-44a46.firebasestorage.app",
+    messagingSenderId: "384870336246",
+    appId: "1:384870336246:web:32fd2faef7bb537ef24ed7",
+    measurementId: "G-ET0KJ54Q8K"
+  };
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDEp9JQHwx2Q7DYRL7NJ76D-6u9ciRnVwI",
-  authDomain: "legalite-2b587.firebaseapp.com",
-  projectId: "legalite-2b587",
-  storageBucket: "legalite-2b587.appspot.com",
-  messagingSenderId: "580387864282",
-  appId: "1:580387864282:web:26550ecfcbc89286ab6fe3",
-};
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  
+  // Analytics initialization (optional, depending on your needs)
+  const analytics = getAnalytics(app);
+  
+  // If you're using Firebase Auth or Firestore, initialize those services too
+  // const auth = getAuth(app);
+  // const db = getFirestore(app);
 
-// Initialize Firebase
-export const FIREBASE_APP = initializeApp(firebaseConfig);
-// export const FIREBASE_AUTH = getAuth(FIREBASE_APP);
-export const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-});
-export const FIREBASE_DB = getFirestore(FIREBASE_APP);
+  // You can now interact with Firebase services
+</script>
