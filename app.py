@@ -1,63 +1,75 @@
-import os
-import firebase_admin
-from firebase_admin import credentials, firestore
 import streamlit as st
+import firebase_admin
+from firebase_admin import credentials, firestore, auth
 
-# Load Firebase credentials using an environment variable (or direct file path)
-firebase_credentials_path = os.getenv("FIREBASE_CREDENTIALS_PATH", "firebase-credentials.json")
+# Initialize Firebase Admin SDK
+# Ensure that you provide the correct path to your Firebase credentials JSON file
+cred = credentials.Certificate("path/to/your/firebase-credentials.json")
+firebase_admin.initialize_app(cred)
 
-# Check if the file exists at the specified path
-if not os.path.exists(firebase_credentials_path):
-    st.error("Firebase credentials file not found. Please ensure the correct path is provided.")
-else:
-    # Initialize Firebase with the credentials
-    cred = credentials.Certificate(firebase_credentials_path)
-    firebase_admin.initialize_app(cred)
+# Initialize Firestore
+db = firestore.client()
 
-    # Initialize Firestore DB
-    db = firestore.client()
+# Streamlit UI
+st.title("Firebase Streamlit App")
 
-    # Function to add data to Firestore
-    def add_sample_data():
-        # Define the collection name (e.g., 'users')
-        collection_name = "users"  # Change this to your collection name
-        
-        # Define sample data to insert
-        sample_data = [
-            {"name": "Alice", "age": 30, "email": "alice@example.com"},
-            {"name": "Bob", "age": 25, "email": "bob@example.com"},
-            {"name": "Charlie", "age": 35, "email": "charlie@example.com"}
-        ]
-        
-        # Add documents to the collection
-        for data in sample_data:
-            db.collection(collection_name).add(data)
-        st.success("Sample data added successfully!")
+# Firebase Authentication Example
+def sign_up_user(email, password):
+    try:
+        user = auth.create_user(
+            email=email,
+            password=password
+        )
+        st.success(f"User {user.uid} created successfully!")
+    except Exception as e:
+        st.error(f"Error: {e}")
 
-    # Call the function to add data
-    add_sample_data()
+def login_user(email, password):
+    try:
+        # Firebase Authentication doesn't provide a simple login method in Admin SDK
+        # This is a simulated example, as Firebase Admin doesn't support client-side login.
+        user = auth.get_user_by_email(email)
+        st.success(f"Logged in as {user.email}")
+    except Exception as e:
+        st.error(f"Error: {e}")
 
-    # Function to get data from Firestore
-    @st.cache
-    def get_data_from_firestore():
-        # Replace 'users' with the actual collection name in your Firestore
-        users_ref = db.collection("users")  # Change this to your collection name
-        docs = users_ref.stream()
+# Firestore operations (Example: Adding a document)
+def add_document_to_firestore(name, age, city):
+    try:
+        doc_ref = db.collection('users').add({
+            'name': name,
+            'age': age,
+            'city': city
+        })
+        st.success(f"Document added with ID: {doc_ref.id}")
+    except Exception as e:
+        st.error(f"Error: {e}")
 
-        data = []
-        for doc in docs:
-            data.append(doc.to_dict())
-        
-        return data
+# Form for user input
+with st.form(key="auth_form"):
+    email = st.text_input("Email")
+    password = st.text_input("Password", type="password")
+    submit_button = st.form_submit_button("Sign Up or Login")
+    
+    if submit_button:
+        sign_up_user(email, password)  # Simulated Sign-Up (Admin SDK doesn't support direct login)
+        login_user(email, password)  # Simulated Login
 
-    # Display data from Firestore in Streamlit
-    data = get_data_from_firestore()
-    st.write(data)
+# Form for adding data to Firestore
+with st.form(key="firestore_form"):
+    name = st.text_input("Name")
+    age = st.number_input("Age", min_value=1)
+    city = st.text_input("City")
+    add_button = st.form_submit_button("Add to Firestore")
 
-    # Optionally, add a feature to display the data in a more readable format
-    if data:
-        st.subheader("User Data")
-        for user in data:
-            st.write(f"Name: {user.get('name')}, Age: {user.get('age')}, Email: {user.get('email')}")
-    else:
-        st.warning("No data found in Firestore.")
+    if add_button:
+        add_document_to_firestore(name, age, city)
+
+# Displaying Firestore Data
+if st.button("Show Firestore Data"):
+    try:
+        users_ref = db.collection('users').stream()
+        for doc in users_ref:
+            st.write(f"{doc.id} => {doc.to_dict()}")
+    except Exception as e:
+        st.error(f"Error: {e}")
